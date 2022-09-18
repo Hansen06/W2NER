@@ -47,8 +47,8 @@ class Trainer(object):
         label_result = []
 
         for i, data_batch in enumerate(data_loader):
-            # data_batch = [data.cuda() for data in data_batch[:-1]]
-            data_batch = [data for data in data_batch[:-1]]
+            data_batch = [data.cuda() for data in data_batch[:-1]]
+            # data_batch = [data for data in data_batch[:-1]]
 
             bert_inputs, grid_labels, grid_mask2d, pieces2word, dist_inputs, sent_length = data_batch
 
@@ -98,8 +98,8 @@ class Trainer(object):
         with torch.no_grad():
             for i, data_batch in enumerate(data_loader):
                 entity_text = data_batch[-1]
-                # data_batch = [data.cuda() for data in data_batch[:-1]]
-                data_batch = [data for data in data_batch[:-1]]
+                data_batch = [data.cuda() for data in data_batch[:-1]]
+                # data_batch = [data for data in data_batch[:-1]]
                 bert_inputs, grid_labels, grid_mask2d, pieces2word, dist_inputs, sent_length = data_batch
 
                 outputs = model(bert_inputs, grid_mask2d, dist_inputs, pieces2word, sent_length)
@@ -159,8 +159,8 @@ class Trainer(object):
             for data_batch in data_loader:
                 sentence_batch = data[i:i+config.batch_size]
                 entity_text = data_batch[-1]
-                # data_batch = [data.cuda() for data in data_batch[:-1]]
-                data_batch = [data for data in data_batch[:-1]]
+                data_batch = [data.cuda() for data in data_batch[:-1]]
+                # data_batch = [data for data in data_batch[:-1]]
                 bert_inputs, grid_labels, grid_mask2d, pieces2word, dist_inputs, sent_length = data_batch
 
                 outputs = model(bert_inputs, grid_mask2d, dist_inputs, pieces2word, sent_length)
@@ -296,7 +296,7 @@ if __name__ == '__main__':
 
     logger.info("Building Model")
     model = Model(config)
-    # model = model.cuda()
+    model = model.cuda()
 
     trainer = Trainer(model)
 
