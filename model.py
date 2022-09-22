@@ -237,14 +237,14 @@ class Model(nn.Module):
         packed_outs, (hidden, _) = self.encoder(packed_embs)
         word_reps, _ = pad_packed_sequence(packed_outs, batch_first=True, total_length=sent_length.max())
 
-        cln = self.cln(word_reps.unsqueeze(2), word_reps)
+        cln = self.cln(word_reps.unsqueeze(2), word_reps) #表示单词信息
 
-        dis_emb = self.dis_embs(dist_inputs)
+        dis_emb = self.dis_embs(dist_inputs) #表示每对单词之间的相对位置信息
         tril_mask = torch.tril(grid_mask2d.clone().long())
         reg_inputs = tril_mask + grid_mask2d.clone().long()
-        reg_emb = self.reg_embs(reg_inputs)
+        reg_emb = self.reg_embs(reg_inputs) #表示网格中区分下三角局域和上三角局域的区域信息
 
-        conv_inputs = torch.cat([dis_emb, reg_emb, cln], dim=-1)
+        conv_inputs = torch.cat([dis_emb, reg_emb, cln], dim=-1) # 单词信息，位置信息，区域信息 三矩阵拼接
         conv_inputs = torch.masked_fill(conv_inputs, grid_mask2d.eq(0).unsqueeze(-1), 0.0)
         conv_outputs = self.convLayer(conv_inputs)
         conv_outputs = torch.masked_fill(conv_outputs, grid_mask2d.eq(0).unsqueeze(-1), 0.0)
