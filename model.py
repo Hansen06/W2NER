@@ -18,7 +18,7 @@ class LayerNorm(nn.Module):
         self.conditional = conditional
         self.hidden_units = hidden_units
         self.hidden_initializer = hidden_initializer
-        self.epsilon = epsilon or 1e-12
+        self.epsilon = epsilon or 1e-12 #防止开根号值为0
         self.input_dim = input_dim
         self.cond_dim = cond_dim
 
@@ -71,11 +71,11 @@ class LayerNorm(nn.Module):
 
         outputs = inputs
         if self.center:
-            mean = torch.mean(outputs, dim=-1).unsqueeze(-1)
+            mean = torch.mean(outputs, dim=-1).unsqueeze(-1) #求均值
             outputs = outputs - mean
         if self.scale:
             variance = torch.mean(outputs ** 2, dim=-1).unsqueeze(-1)
-            std = (variance + self.epsilon) ** 0.5
+            std = (variance + self.epsilon) ** 0.5 #求方差
             outputs = outputs / std
             outputs = outputs * gamma
         if self.center:
@@ -240,14 +240,15 @@ class Model(nn.Module):
         cln = self.cln(word_reps.unsqueeze(2), word_reps) #表示单词信息
 
         dis_emb = self.dis_embs(dist_inputs) #表示每对单词之间的相对位置信息
-        tril_mask = torch.tril(grid_mask2d.clone().long())
-        reg_inputs = tril_mask + grid_mask2d.clone().long()
+
+        tril_mask = torch.tril(grid_mask2d.clone().long()) #保留下三角矩阵
+        reg_inputs = tril_mask + grid_mask2d.clone().long() # 下三角与原始矩阵相加，构建成上下三角矩阵值为1，下三角矩阵值为2的区域信息
         reg_emb = self.reg_embs(reg_inputs) #表示网格中区分下三角局域和上三角局域的区域信息
 
         conv_inputs = torch.cat([dis_emb, reg_emb, cln], dim=-1) # 单词信息，位置信息，区域信息 三矩阵拼接
         conv_inputs = torch.masked_fill(conv_inputs, grid_mask2d.eq(0).unsqueeze(-1), 0.0)
-        conv_outputs = self.convLayer(conv_inputs)
+        conv_outputs = self.convLayer(conv_inputs) #过卷积层
         conv_outputs = torch.masked_fill(conv_outputs, grid_mask2d.eq(0).unsqueeze(-1), 0.0)
-        outputs = self.predictor(word_reps, word_reps, conv_outputs)
+        outputs = self.predictor(word_reps, word_reps, conv_outputs) # 过双仿射网络，并和卷积结果对应位置相加
 
         return outputs
