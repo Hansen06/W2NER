@@ -180,7 +180,7 @@ class CoPredictor(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, bert):
         super(Model, self).__init__()
         self.use_bert_last_4_layers = config.use_bert_last_4_layers
 
@@ -189,7 +189,7 @@ class Model(nn.Module):
 
         lstm_input_size = 0
 
-        self.bert = AutoModel.from_pretrained(config.model_checkpoint, output_hidden_states=True)
+        self.bert = bert
         lstm_input_size += config.bert_hid_size
 
         self.dis_embs = nn.Embedding(20, config.dist_emb_size)

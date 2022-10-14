@@ -9,6 +9,8 @@ import transformers
 from sklearn.metrics import precision_recall_fscore_support, f1_score
 from torch.utils.data import DataLoader
 
+from transformers import AutoTokenizer, AutoModel
+
 import config
 import data_loader
 import utils
@@ -221,6 +223,14 @@ class Trainer(object):
         self.model.load_state_dict(torch.load(path))
 
 
+ATTR_TO_SPECIAL_TOKEN = {'additional_special_tokens':['[next]']}
+
+def add_special_tokens(model, tokenizer):
+    orig_num_tokens = len(tokenizer.vocab)
+    num_add_tokens = tokenizer.add_special_tokens(ATTR_TO_SPECIAL_TOKEN)
+    if num_add_tokens > 0:
+        model.resize_token_embeddings(new_num_tokens=orig_num_tokens + num_add_tokens)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default='./config/conll03.json')
@@ -228,6 +238,7 @@ if __name__ == '__main__':
     parser.add_argument('--id2label_path', type=str, default='./outputs/model.pt')
     parser.add_argument('--predict_path', type=str, default='./outputs/output.json')
     parser.add_argument('--model_checkpoint', type=str, default='./models/base')
+    parser.add_argument('--dataset', type=str, default='sym')
     parser.add_argument('--device', type=int, default=0)
 
     parser.add_argument('--dist_emb_size', type=int)
@@ -278,8 +289,19 @@ if __name__ == '__main__':
     # torch.backends.cudnn.benchmark = False
     # torch.backends.cudnn.deterministic = True
 
+    bert = AutoModel.from_pretrained(config.model_checkpoint, output_hidden_states=True)
+    tokenizer = AutoTokenizer.from_pretrained(config.model_checkpoint)
+
+    add_special_tokens(bert, tokenizer)
+    print(tokenizer.additional_special_tokens)
+    print(tokenizer.additional_special_tokens_ids)
+
+    logger.info("Building Model")
+    model = Model(config, bert)
+    model = model.cuda()
+
     logger.info("Loading Data")
-    datasets, ori_data = data_loader.load_data_bert(config)
+    datasets, ori_data = data_loader.load_data_bert(config, tokenizer)
 
     train_loader, dev_loader, test_loader = (
         DataLoader(dataset=dataset,
@@ -291,12 +313,7 @@ if __name__ == '__main__':
         for i, dataset in enumerate(datasets)
     )
 
-
     updates_total = len(datasets[0]) // config.batch_size * config.epochs
-
-    logger.info("Building Model")
-    model = Model(config)
-    model = model.cuda()
 
     trainer = Trainer(model)
 

@@ -176,7 +176,7 @@ def fill_vocab(vocab, dataset):
     return entity_num
 
 
-def load_data_bert(config):
+def load_data_bert(config, tokenizer):
     with open('./data/{}/train.json'.format(config.dataset), 'r', encoding='utf-8') as f:
         train_data = json.load(f)
     with open('./data/{}/dev.json'.format(config.dataset), 'r', encoding='utf-8') as f:
@@ -184,7 +184,7 @@ def load_data_bert(config):
     with open('./data/{}/test.json'.format(config.dataset), 'r', encoding='utf-8') as f:
         test_data = json.load(f)
 
-    tokenizer = AutoTokenizer.from_pretrained(config.model_checkpoint)
+    # tokenizer = AutoTokenizer.from_pretrained(config.model_checkpoint)
 
     vocab = Vocabulary()
     train_ent_num = fill_vocab(vocab, train_data)
