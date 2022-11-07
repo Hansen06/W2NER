@@ -178,11 +178,31 @@ def fill_vocab(vocab, dataset):
 
 def load_data_bert(config, tokenizer):
     with open('./data/{}/train.json'.format(config.dataset), 'r', encoding='utf-8') as f:
-        train_data = json.load(f)
+        _train_data = json.load(f)
     with open('./data/{}/dev.json'.format(config.dataset), 'r', encoding='utf-8') as f:
-        dev_data = json.load(f)
+        _dev_data = json.load(f)
     with open('./data/{}/test.json'.format(config.dataset), 'r', encoding='utf-8') as f:
-        test_data = json.load(f)
+        _test_data = json.load(f)
+
+    train_data = []
+    dev_data = []
+    test_data = []
+    max_length = 120
+    for instance in _train_data:
+        if len(instance['sentence']) == 0 and len(instance['sentence']) > max_length:
+            continue
+        else:
+            train_data.append(instance)
+    for instance in _dev_data:
+        if len(instance['sentence']) == 0 and len(instance['sentence']) > max_length:
+            continue
+        else:
+            dev_data.append(instance)
+    for instance in _test_data:
+        if len(instance['sentence']) == 0 and len(instance['sentence']) > max_length:
+            continue
+        else:
+            test_data.append(instance)
 
     # tokenizer = AutoTokenizer.from_pretrained(config.model_checkpoint)
 

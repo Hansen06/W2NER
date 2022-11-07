@@ -278,6 +278,7 @@ if __name__ == '__main__':
     logger.info(config)
     print(config)
     config.logger = logger
+    config.batch_size = args.batch_size
 
     if torch.cuda.is_available():
         torch.cuda.set_device(args.device)
